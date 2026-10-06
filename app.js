@@ -18,7 +18,6 @@ function welcome() {
     <h1 tabindex="-1">Проверьте свою<br class="desktop-break"> грамматику английского</h1>
     <p class="lead">50 вопросов от базового уровня до B2. Тест поможет предварительно определить, насколько уверенно вы владеете английской грамматикой.</p>
     <div class="start-row"><button class="primary" id="start">Начать тест <span aria-hidden="true">→</span></button><span class="time">Примерное время: 10–15 минут</span></div>
-    <div class="welcome-details"><span>50 вопросов</span><span>По одному на экран</span><span>Результат сразу</span></div>
     <p class="disclaimer">Это не полноценное определение уровня английского: тест проверяет только грамматику. Разговорную речь, понимание на слух и активный словарный запас лучше проверить отдельно.</p>
   </section>`;
   document.querySelector('#start').addEventListener('click', start);
@@ -60,6 +59,51 @@ function renderResult() {
   const { scores, level } = scoreAnswers(questions, answers);
   const labels = ['База', 'A2 grammar', 'B1 grammar', 'B2 grammar'];
   const maxima = [10, 15, 15, 10];
+
+  const mistakes = questions
+    .map((question, index) => ({ question, index, selected: answers[index] }))
+    .filter(({ question, selected }) => selected !== question.answer);
+
+  const mistakesMarkup = mistakes.length
+    ? `<section class="mistakes" aria-labelledby="mistakes-title">
+        <div class="mistakes-title-row">
+          <h2 id="mistakes-title">Ошибки в тесте</h2>
+          <span>${mistakes.length}</span>
+        </div>
+        <div class="mistakes-list">
+          ${mistakes.map(({ question, index, selected }) => `
+            <article class="mistake-card">
+              <p class="mistake-number">Вопрос ${index + 1}</p>
+              <p class="mistake-sentence" lang="en">${question.sentence}</p>
+              <div class="mistake-answers">
+                <p><span>Ваш ответ</span><strong class="wrong-answer" lang="en">${question.choices[selected]}</strong></p>
+                <p><span>Правильный ответ</span><strong class="correct-answer" lang="en">${question.choices[question.answer]}</strong></p>
+              </div>
+            </article>`).join('')}
+        </div>
+      </section>`
+    : `<section class="mistakes mistakes-perfect" aria-labelledby="mistakes-title">
+        <h2 id="mistakes-title">Ошибок нет</h2>
+        <p>Все 50 ответов правильные.</p>
+      </section>`;
+
+  const teacherSummary = [
+    `Ориентировочный уровень грамматики: ${level}`,
+    '',
+    `База: ${scores[0]} / 10`,
+    `A2 grammar: ${scores[1]} / 15`,
+    `B1 grammar: ${scores[2]} / 15`,
+    `B2 grammar: ${scores[3]} / 10`,
+    '',
+    mistakes.length ? `Ошибки (${mistakes.length}):` : 'Ошибок нет.',
+    ...mistakes.flatMap(({ question, index, selected }) => [
+      `Вопрос ${index + 1}: ${question.sentence}`,
+      `Ответ ученицы: ${question.choices[selected]}`,
+      `Правильный ответ: ${question.choices[question.answer]}`,
+      ''
+    ])
+  ].join('\n').trim();
+
   app.innerHTML = `<section class="result screen">
     <p class="eyebrow">Тест завершён · 50 из 50</p>
     <p class="result-intro">Ваш ориентировочный уровень грамматики — ${level}</p>
@@ -67,8 +111,33 @@ function renderResult() {
     <p class="lead result-description">${descriptions[level]}</p>
     <div class="scores">${scores.map((score, i) => `<div class="score-row"><span>${labels[i]}</span><span class="score-track" aria-hidden="true"><span style="width:${score / maxima[i] * 100}%"></span></span><strong>${score} / ${maxima[i]}</strong></div>`).join('')}</div>
     <p class="disclaimer">${note}</p>
-    <button class="primary" id="restart">Пройти тест ещё раз <span aria-hidden="true">↗</span></button>
+    ${mistakesMarkup}
+    <div class="result-actions">
+      <button class="secondary copy-result" id="copy-result">Скопировать результат для преподавателя</button>
+      <span class="copy-status" id="copy-status" role="status" aria-live="polite"></span>
+      <button class="primary" id="restart">Пройти тест ещё раз <span aria-hidden="true">↗</span></button>
+    </div>
   </section>`;
+
+  document.querySelector('#copy-result').addEventListener('click', async () => {
+    const status = document.querySelector('#copy-status');
+    try {
+      await navigator.clipboard.writeText(teacherSummary);
+      status.textContent = 'Результат скопирован';
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = teacherSummary;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+      status.textContent = 'Результат скопирован';
+    }
+  });
+
   document.querySelector('#restart').addEventListener('click', start);
   focusHeading();
 }
