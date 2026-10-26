@@ -50,12 +50,12 @@ export const questions = [
     "answer": 1
   },
   {
-    "sentence": "___ you work from home?",
+    "sentence": "In your current job, ___ you work from home every day?",
     "choices": [
       "Are",
       "Do",
       "Does",
-      "Did"
+      "Is"
     ],
     "answer": 1
   },
@@ -270,14 +270,14 @@ export const questions = [
     "answer": 1
   },
   {
-    "sentence": "She ___ English for three years.",
+    "sentence": "She started studying English three years ago and is still learning it today. She ___ English ever since.",
     "choices": [
-      "has been studying",
       "studied",
       "is studying",
+      "has been studying",
       "had studied"
     ],
-    "answer": 0
+    "answer": 2
   },
   {
     "sentence": "By the time we arrived, the movie ___.",
@@ -440,14 +440,14 @@ export const questions = [
     "answer": 1
   },
   {
-    "sentence": "Nobody is answering the door, but all the lights are on. They ___ gone to bed.",
+    "sentence": "They've been in the kitchen with me all evening, and we're still chatting. They ___ gone to bed yet.",
     "choices": [
       "must have",
-      "can't have",
       "should",
+      "can't have",
       "can't"
     ],
-    "answer": 1
+    "answer": 2
   },
   {
     "sentence": "By next June, I ___ here for ten years.",
@@ -500,3 +500,4 @@ export const questions = [
     "answer": 1
   }
 ];
+
