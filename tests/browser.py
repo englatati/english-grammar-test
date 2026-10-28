@@ -94,7 +94,8 @@ with sync_playwright() as p:
         expected_summary = ['Ориентировочный уровень грамматики: B2', '', 'База: 9 / 10', 'A2 grammar: 15 / 15', 'B1 grammar: 14 / 15', 'B2 grammar: 9 / 10', '', 'Ошибки (3):']
         for card, (number, wrong, correct) in zip(cards.all(), [(6, 'Is', 'Do'), (28, 'studied', 'has been studying'), (45, 'must have', "can't have")]):
             sentence = questions[number - 1]['sentence']
-            assert card.locator('.mistake-number').inner_text() == f'Вопрос {number}'
+            # Compare source text: CSS renders this label in uppercase.
+            assert card.locator('.mistake-number').text_content() == f'Вопрос {number}'
             assert card.locator('.mistake-sentence').inner_text() == sentence
             assert card.locator('.wrong-answer').inner_text() == wrong
             assert card.locator('.correct-answer').inner_text() == correct
@@ -111,4 +112,3 @@ with sync_playwright() as p:
         print(f'PASS {width}px: keyboard, back, 150 answers, results, reset, revised mistakes, clipboard and fallback, no external requests or storage')
         context.close()
     browser.close()
-
