@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { questions } from '../questions.js';
 import { determineLevel, scoreAnswers } from '../scoring.js';
 
-test('50 questions match the supplied answer key', () => {
-  // Compare against an independently transcribed key, grouped by hidden block.
-  const blocks = ['ABBBBBBABA', 'BBBABBACBABBCCA', 'ABACABBBBCBBBAC', 'BABBBBBAAB'];
+test('50 questions match the revised diagnostic answer key', () => {
+  // Independently transcribed key: Q6 B, Q28 C, Q45 C after clarification.
+  const blocks = ['ABBBBBBABA', 'BBBABBACBABBCCA', 'ABCCABBBBCBBBAC', 'BABBCBBAAB'];
   assert.equal(questions.length, 50);
   assert.equal(questions.map(q => 'ABCD'[q.answer]).join(''), blocks.join(''));
   for (const q of questions) {
@@ -15,6 +15,25 @@ test('50 questions match the supplied answer key', () => {
   }
   assert.deepEqual(scoreAnswers(questions, questions.map(q => q.answer)), { scores: [10,15,15,10], level: 'B2' });
   assert.deepEqual(scoreAnswers(questions, questions.map(q => (q.answer + 1) % 4)), { scores: [0,0,0,0], level: 'A1 пока не сформирован' });
+});
+
+test('clarified questions retain their context, choices, and single assigned key', () => {
+  const revised = [
+    [6, 'In your current job, ___ you work from home every day?', ['Are', 'Do', 'Does', 'Is'], 1],
+    [28, 'She started studying English three years ago and is still learning it today. She ___ English ever since.', ['studied', 'is studying', 'has been studying', 'had studied'], 2],
+    [45, "They've been in the kitchen with me all evening, and we're still chatting. They ___ gone to bed yet.", ['must have', 'should', "can't have", "can't"], 2],
+  ];
+  for (const [number, sentence, choices, answer] of revised) {
+    assert.deepEqual(questions[number - 1], { sentence, choices, answer });
+    const block = number <= 10 ? 0 : number <= 25 ? 1 : number <= 40 ? 2 : 3;
+    for (let choice = 0; choice < 4; choice++) {
+      const answers = questions.map(q => q.answer);
+      answers[number - 1] = choice;
+      const expected = [10, 15, 15, 10];
+      if (choice !== answer) expected[block]--;
+      assert.deepEqual(scoreAnswers(questions, answers).scores, expected, `Q${number}, choice ${choice}`);
+    }
+  }
 });
 
 test('all 30,976 possible block scores select the highest eligible level', () => {
@@ -39,3 +58,4 @@ test('failed basic blocks prevent advancement despite advanced scores', () => {
   assert.equal(determineLevel([8,10,15,10]), 'A2');
   assert.equal(determineLevel([8,12,11,7]), 'B1');
 });
+
